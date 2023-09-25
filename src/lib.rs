@@ -32,14 +32,14 @@ fn save_data(username: String, password: String) {
 
 pub async fn get_password() {
     // Get document and wait for submit
-    log!("Waiting for form to load...");
+    log!("Waiting for form to load to get data...");
     let document = window().unwrap().document().unwrap();
     let submit_button = loop {
         let submit_button = document.query_selector("input[name=submit]").unwrap();
         if let Some(submit_button) = submit_button {
             break submit_button;
         }
-        sleep(Duration::from_millis(100)).await;
+        sleep(Duration::from_millis(50)).await;
     };
 
     // Create an intermediairy submit button
@@ -74,6 +74,36 @@ pub async fn get_password() {
     on_submit.forget();
 }
 
+pub async fn enter_password(username: String, password: String) {
+    // Get document and wait for submit
+    log!("Waiting for form to load to enter data...");
+    let document = window().unwrap().document().unwrap();
+    let username_input = loop {
+        let username_input = document.query_selector("input[name=username]").unwrap();
+        if let Some(username_input) = username_input {
+            break username_input;
+        }
+        sleep(Duration::from_millis(50)).await;
+    };
+
+    let password_input = document.query_selector("input[name=password]").unwrap().unwrap();
+    let form = document.query_selector("form").unwrap().unwrap();
+
+    username_input
+        .dyn_into::<HtmlInputElement>()
+        .unwrap()
+        .set_value(&username);
+    password_input
+        .dyn_into::<HtmlInputElement>()
+        .unwrap()
+        .set_value(&password);
+    form
+        .dyn_into::<HtmlFormElement>()
+        .unwrap()
+        .submit()
+        .unwrap();
+}
+
 #[wasm_bindgen(start)]
 pub async fn main() {
     std::panic::set_hook(Box::new(console_error_panic_hook::hook));
@@ -81,10 +111,10 @@ pub async fn main() {
     log!("Hello World!");
 
     // get password from local storage
-    let data = load_data();
-
-    spawn_local(get_password());
-
+    match load_data() {
+        Some((username, password)) => enter_password(username, password).await,
+        None => get_password().await,
+    }
      
     log!("Got password!");
 }
