@@ -1,7 +1,6 @@
 #!/bin/sh
 
 rm -rf pkg
-wasm-pack build --target=no-modules || exit 1
 
 # Find value of argument --manifest-version
 for arg in "$@"; do
@@ -11,6 +10,22 @@ for arg in "$@"; do
       ;;
   esac
 done
+
+# Find whether release was passed
+for arg in "$@"; do
+  case "$arg" in
+    --release)
+      release=true
+      ;;
+  esac
+done
+
+# Build for release or debug
+if [ "$release" = true ]; then
+  wasm-pack build --target=no-modules --release || exit 1
+else
+  wasm-pack build --target=no-modules --dev || exit 1
+fi
 
 # Copy manifest.json to pkg
 if [ "$manifest_version" = "v3" ] || [ "$manifest_version" = "3" ]; then
