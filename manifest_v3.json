@@ -1,0 +1,19 @@
+{
+    "name" : "insa-login-rememberer",
+    "version" : "1.0",
+    "description" : "insa-login-rememberer",
+    "permissions": [],
+    "content_scripts": [
+        {
+            "matches": ["*://*.example.com/*"],
+            "js": [
+                "insa_login_rememberer.js", "run_wasm.js"
+            ]
+        }
+    ],
+    "web_accessible_resources": [{
+        "resources": ["insa_login_rememberer_bg.wasm"],
+        "matches": ["*://*.example.com/*"]
+    }],
+    "manifest_version": 3
+}
