@@ -1,5 +1,8 @@
 #!/bin/sh
 
+command -v cargo >/dev/null 2>&1 || { echo >&2 "Installing cargo..."; curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh; }
+command -v wasm-pack >/dev/null 2>&1 || { echo >&2 "Installing wasm-pack..."; cargo install wasm-pack; }
+
 rm -rf pkg
 
 # Find value of argument --manifest-version
