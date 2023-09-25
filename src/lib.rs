@@ -108,13 +108,8 @@ pub async fn enter_password(username: String, password: String) {
 pub async fn main() {
     std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 
-    log!("Hello World!");
-
-    // get password from local storage
     match load_data() {
         Some((username, password)) => enter_password(username, password).await,
         None => get_password().await,
     }
-     
-    log!("Got password!");
 }
