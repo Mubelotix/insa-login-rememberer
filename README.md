@@ -6,4 +6,5 @@ Passwords are saved locally in the browser's storage.
 Both manifest v2 and v3 are supported.
 
 Use the `build.sh` script to build the extension.
-Rust and `wasm-pack` are required but the script should be able to install them automatically.
+[Rust](https://rust-lang.org/) and [`wasm-pack`](https://rustwasm.github.io/wasm-pack/) are required but the script should be able to install them automatically.
+The script is intended to run on Linux.
