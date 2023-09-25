@@ -30,17 +30,21 @@ fn save_data(username: String, password: String) {
         .unwrap()
 }
 
+async fn waiting_query(document: &Document, selector: &str) -> Element {
+    loop {
+        let element = document.query_selector(selector).unwrap();
+        if let Some(element) = element {
+            break element;
+        }
+        sleep(Duration::from_millis(50)).await;
+    }
+}
+
 pub async fn get_password() {
     // Get document and wait for submit
     log!("Waiting for form to load to get data...");
     let document = window().unwrap().document().unwrap();
-    let submit_button = loop {
-        let submit_button = document.query_selector("input[name=submit]").unwrap();
-        if let Some(submit_button) = submit_button {
-            break submit_button;
-        }
-        sleep(Duration::from_millis(50)).await;
-    };
+    let submit_button = waiting_query(&document, "input[name=submit]").await;
 
     // Create an intermediairy submit button
     let second_button = document.create_element("button").unwrap();
@@ -78,13 +82,7 @@ pub async fn enter_password(username: String, password: String) {
     // Get document and wait for submit
     log!("Waiting for form to load to enter data...");
     let document = window().unwrap().document().unwrap();
-    let username_input = loop {
-        let username_input = document.query_selector("input[name=username]").unwrap();
-        if let Some(username_input) = username_input {
-            break username_input;
-        }
-        sleep(Duration::from_millis(50)).await;
-    };
+    let username_input = waiting_query(&document, "input[name=username]").await;
 
     let password_input = document.query_selector("input[name=password]").unwrap().unwrap();
     let form = document.query_selector("form").unwrap().unwrap();
