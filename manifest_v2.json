@@ -5,7 +5,7 @@
     "permissions": [],
     "content_scripts": [
         {
-            "matches": ["*://*.example.com/*"],
+            "matches": ["https://cas.insa-rouen.fr/*"],
             "js": [
                 "insa_login_rememberer.js", "run_wasm.js"
             ]
