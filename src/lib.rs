@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use wasm_bindgen::prelude::*;
+use wasm_bindgen_futures::spawn_local;
 use web_sys::*;
 #[macro_use]
 mod util;
@@ -31,25 +32,43 @@ fn save_data(username: String, password: String) {
 
 pub async fn get_password() {
     // Get document and wait for submit
+    log!("Waiting for form to load...");
     let document = window().unwrap().document().unwrap();
     let submit_button = loop {
-        let submit_button = document.query_selector("h2").unwrap();
+        let submit_button = document.query_selector("input[name=submit]").unwrap();
         if let Some(submit_button) = submit_button {
             break submit_button;
         }
         sleep(Duration::from_millis(100)).await;
     };
-    
+
+    // Create an intermediairy submit button
+    let second_button = document.create_element("button").unwrap();
+    let second_button: HtmlElement = second_button.dyn_into::<HtmlElement>().unwrap();
+    second_button.set_inner_text("Login Forever");
+    second_button.set_attribute("class", "btn btn-block btn-submit").unwrap();
+    submit_button.insert_adjacent_element("afterend", &second_button).unwrap();
+
+    // Remove the first button from the DOM
+    submit_button.remove();
+
+    // Get the form
+    let form = document.query_selector("form").unwrap().unwrap();
+    let form: HtmlFormElement = form.dyn_into().unwrap();
+
     // Read input values on submit
-    let on_submit = Closure::wrap(Box::new(move || {
+    log!("Waiting for submission...");
+    let on_submit = Closure::wrap(Box::new(move |e: Event| {
+        e.prevent_default();
         let password_input = document.query_selector("input[name=password]").unwrap().unwrap();
         let password = password_input.dyn_into::<HtmlInputElement>().unwrap().value();
         let username_input = document.query_selector("input[name=username]").unwrap().unwrap();
         let username = username_input.dyn_into::<HtmlInputElement>().unwrap().value();
         log!("Got username {username} and passsword!");
         save_data(username, password);
-    }) as Box<dyn FnMut()>);
-    submit_button
+        form.submit().unwrap();
+    }) as Box<dyn FnMut(Event)>);
+    second_button
         .add_event_listener_with_callback("click", on_submit.as_ref().unchecked_ref())
         .unwrap();
     on_submit.forget();
@@ -59,12 +78,13 @@ pub async fn get_password() {
 pub async fn main() {
     std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 
-    // get password from local storage
-    let data= load_data();
-
-    if data.is_none() {
-        get_password().await;
-    }
-
     log!("Hello World!");
+
+    // get password from local storage
+    let data = load_data();
+
+    spawn_local(get_password());
+
+     
+    log!("Got password!");
 }
