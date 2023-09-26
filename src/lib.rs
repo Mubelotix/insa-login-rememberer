@@ -1,7 +1,6 @@
 use std::time::Duration;
 
 use wasm_bindgen::prelude::*;
-use wasm_bindgen_futures::spawn_local;
 use web_sys::*;
 #[macro_use]
 mod util;
