@@ -1,0 +1,12 @@
+{
+    "addons": {
+        "insa-login-rememberer@mubelotix.dev": {
+            "updates": [
+                {
+                    "version": "0.1",
+                    "update_link": "todo"
+                }
+            ]
+        }
+    }
+}

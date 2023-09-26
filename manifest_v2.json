@@ -1,5 +1,6 @@
 {
     "name" : "insa-login-rememberer",
+    "manifest_version": 2,
     "version" : "1.0",
     "description" : "Extension to automatically login to your INSA account.",
     "permissions": [],
@@ -14,5 +15,10 @@
     "web_accessible_resources": [
         "insa_login_rememberer_bg.wasm"
     ],
-    "manifest_version": 2
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "insa-login-rememberer@mubelotix.dev",
+            "update_url": "https://example.com/updates.json"
+        }
+    }
 }
