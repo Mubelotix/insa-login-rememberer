@@ -9,7 +9,8 @@
             "matches": ["https://cas.insa-rouen.fr/*", "https://moodle.insa-rouen.fr/login/index.php", "https://dsi.insa-rouen.fr/cas/"],
             "js": [
                 "insa_login_rememberer.js", "run_wasm.js"
-            ]
+            ],
+            "all_frames": false
         }
     ],
     "web_accessible_resources": [
