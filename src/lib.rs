@@ -39,33 +39,49 @@ async fn waiting_query(document: &Document, selector: &str) -> Element {
     }
 }
 
-pub async fn get_password() {
+struct LoginPageDesc {
+    submit_button_selector: &'static str,
+    username_input_selector: &'static str,
+    password_input_selector: &'static str,
+    form_selector: &'static str,
+    submit_button_classes: &'static str,
+}
+
+const CAS_LOGIN_PAGE_DESC: LoginPageDesc = LoginPageDesc {
+    submit_button_selector: "input[name=submit]",
+    username_input_selector: "input[name=username]",
+    password_input_selector: "input[name=password]",
+    form_selector: "form",
+    submit_button_classes: "btn btn-block btn-submit",
+};
+
+async fn get_password(page_desc: &'static LoginPageDesc) {
     // Get document and wait for submit
     log!("Waiting for form to load to get data...");
     let document = window().unwrap().document().unwrap();
-    let submit_button = waiting_query(&document, "input[name=submit]").await;
+    let submit_button = waiting_query(&document, page_desc.submit_button_selector).await;
 
     // Create an intermediairy submit button
     let second_button = document.create_element("button").unwrap();
     let second_button: HtmlElement = second_button.dyn_into::<HtmlElement>().unwrap();
     second_button.set_inner_text("Login Forever");
-    second_button.set_attribute("class", "btn btn-block btn-submit").unwrap();
+    second_button.set_attribute("class", page_desc.submit_button_classes).unwrap();
     submit_button.insert_adjacent_element("afterend", &second_button).unwrap();
 
     // Remove the first button from the DOM
     submit_button.remove();
 
     // Get the form
-    let form = document.query_selector("form").unwrap().unwrap();
+    let form = document.query_selector(page_desc.form_selector).unwrap().unwrap();
     let form: HtmlFormElement = form.dyn_into().unwrap();
 
     // Read input values on submit
     log!("Waiting for submission...");
     let on_submit = Closure::wrap(Box::new(move |e: Event| {
         e.prevent_default();
-        let password_input = document.query_selector("input[name=password]").unwrap().unwrap();
+        let password_input = document.query_selector(page_desc.password_input_selector).unwrap().unwrap();
         let password = password_input.dyn_into::<HtmlInputElement>().unwrap().value();
-        let username_input = document.query_selector("input[name=username]").unwrap().unwrap();
+        let username_input = document.query_selector(page_desc.username_input_selector).unwrap().unwrap();
         let username = username_input.dyn_into::<HtmlInputElement>().unwrap().value();
         log!("Got username {username} and passsword!");
         save_data(username, password);
@@ -77,14 +93,14 @@ pub async fn get_password() {
     on_submit.forget();
 }
 
-pub async fn enter_password(username: String, password: String) {
+async fn enter_password(page_desc: &'static LoginPageDesc, username: String, password: String) {
     // Get document and wait for submit
     log!("Waiting for form to load to enter data...");
     let document = window().unwrap().document().unwrap();
-    let username_input = waiting_query(&document, "input[name=username]").await;
-    let password_input = document.query_selector("input[name=password]").unwrap().unwrap();
-    let submit_button = document.query_selector("input[name=submit]").unwrap().unwrap();
-    let form = document.query_selector("form").unwrap().unwrap();
+    let username_input = waiting_query(&document, page_desc.username_input_selector).await;
+    let password_input = document.query_selector(page_desc.password_input_selector).unwrap().unwrap();
+    let submit_button = document.query_selector(page_desc.submit_button_selector).unwrap().unwrap();
+    let form = document.query_selector(page_desc.form_selector).unwrap().unwrap();
 
     // Rename the submit button
     submit_button.set_attribute("name", "submit2").unwrap();
@@ -125,8 +141,8 @@ pub async fn main() {
         "https://dsi.insa-rouen.fr/cas/" => window.location().set_href("https://dsi.insa-rouen.fr/accounts/login/").unwrap(),
         url if url.starts_with("https://cas.insa-rouen.fr/") => {
             match load_data() {
-                Some((username, password)) => enter_password(username, password).await,
-                None => get_password().await,
+                Some((username, password)) => enter_password(&CAS_LOGIN_PAGE_DESC, username, password).await,
+                None => get_password(&CAS_LOGIN_PAGE_DESC).await,
             }
         }
         url => log!("Unknown url: {}", url),
