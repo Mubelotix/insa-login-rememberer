@@ -82,10 +82,15 @@ pub async fn enter_password(username: String, password: String) {
     log!("Waiting for form to load to enter data...");
     let document = window().unwrap().document().unwrap();
     let username_input = waiting_query(&document, "input[name=username]").await;
-
     let password_input = document.query_selector("input[name=password]").unwrap().unwrap();
+    let submit_button = document.query_selector("input[name=submit]").unwrap().unwrap();
     let form = document.query_selector("form").unwrap().unwrap();
 
+    // Rename the submit button
+    submit_button.set_attribute("name", "submit2").unwrap();
+    submit_button.set_attribute("value", "Logging in automatically...").unwrap();
+
+    // Set the values
     username_input
         .dyn_into::<HtmlInputElement>()
         .unwrap()
@@ -94,6 +99,8 @@ pub async fn enter_password(username: String, password: String) {
         .dyn_into::<HtmlInputElement>()
         .unwrap()
         .set_value(&password);
+
+    // Submit the form
     form
         .dyn_into::<HtmlFormElement>()
         .unwrap()
