@@ -111,6 +111,7 @@ pub async fn enter_password(username: String, password: String) {
 #[wasm_bindgen(start)]
 pub async fn main() {
     std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+    log!("Hello, world!");
 
     // Get the url
     let window = window().unwrap();
@@ -121,6 +122,7 @@ pub async fn main() {
     // Run the appropriate code for the page
     match url.as_str() {
         "https://moodle.insa-rouen.fr/login/index.php" => window.location().set_href("https://moodle.insa-rouen.fr/login/index.php?authCAS=CAS").unwrap(),
+        "https://dsi.insa-rouen.fr/cas/" => window.location().set_href("https://dsi.insa-rouen.fr/accounts/login/").unwrap(),
         url if url.starts_with("https://cas.insa-rouen.fr/") => {
             match load_data() {
                 Some((username, password)) => enter_password(username, password).await,

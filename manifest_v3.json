@@ -5,7 +5,7 @@
     "permissions": [],
     "content_scripts": [
         {
-            "matches": ["https://cas.insa-rouen.fr/*", "https://moodle.insa-rouen.fr/login/index.php"],
+            "matches": ["https://cas.insa-rouen.fr/*", "https://moodle.insa-rouen.fr/login/index.php", "https://dsi.insa-rouen.fr/cas/"],
             "js": [
                 "insa_login_rememberer.js", "run_wasm.js"
             ]
@@ -13,7 +13,7 @@
     ],
     "web_accessible_resources": [{
         "resources": ["insa_login_rememberer_bg.wasm"],
-        "matches": ["https://cas.insa-rouen.fr/*", "https://moodle.insa-rouen.fr/login/index.php"]
+        "matches": ["https://cas.insa-rouen.fr/*", "https://moodle.insa-rouen.fr/login/index.php", "https://dsi.insa-rouen.fr/cas/"]
     }],
     "manifest_version": 3
 }
