@@ -105,8 +105,21 @@ pub async fn enter_password(username: String, password: String) {
 pub async fn main() {
     std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 
-    match load_data() {
-        Some((username, password)) => enter_password(username, password).await,
-        None => get_password().await,
+    // Get the url
+    let window = window().unwrap();
+    let document = window.document().unwrap();
+    let location = document.location().unwrap();
+    let url = location.href().unwrap();
+
+    // Run the appropriate code for the page
+    match url.as_str() {
+        "https://moodle.insa-rouen.fr/login/index.php" => window.location().set_href("https://moodle.insa-rouen.fr/login/index.php?authCAS=CAS").unwrap(),
+        url if url.starts_with("https://cas.insa-rouen.fr/") => {
+            match load_data() {
+                Some((username, password)) => enter_password(username, password).await,
+                None => get_password().await,
+            }
+        }
+        url => log!("Unknown url: {}", url),
     }
 }
