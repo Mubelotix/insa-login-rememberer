@@ -30,12 +30,14 @@ fn save_data(username: String, password: String) {
 }
 
 async fn waiting_query(document: &Document, selector: &str) -> Element {
+    let mut i = 0;
     loop {
         let element = document.query_selector(selector).unwrap();
         if let Some(element) = element {
             break element;
         }
-        sleep(Duration::from_millis(50)).await;
+        sleep(Duration::from_millis(50*i)).await;
+        i += 1;
     }
 }
 
@@ -53,6 +55,14 @@ const CAS_LOGIN_PAGE_DESC: LoginPageDesc = LoginPageDesc {
     password_input_selector: "input[name=password]",
     form_selector: "form",
     submit_button_classes: "btn btn-block btn-submit",
+};
+
+const PARTAGE_LOGIN_PAGE_DESC: LoginPageDesc = LoginPageDesc {
+    submit_button_selector: "input[type=submit]",
+    username_input_selector: "input[name=username]",
+    password_input_selector: "input[name=password]",
+    form_selector: "form",
+    submit_button_classes: "ZLoginButton DwtButton",
 };
 
 async fn get_password(page_desc: &'static LoginPageDesc) {
@@ -124,6 +134,13 @@ async fn enter_password(page_desc: &'static LoginPageDesc, username: String, pas
         .unwrap();
 }
 
+async fn auto_login(page_desc: &'static LoginPageDesc) {
+    match load_data() {
+        Some((username, password)) => enter_password(page_desc, username, password).await,
+        None => get_password(page_desc).await,
+    }
+}
+
 #[wasm_bindgen(start)]
 pub async fn main() {
     std::panic::set_hook(Box::new(console_error_panic_hook::hook));
@@ -139,12 +156,8 @@ pub async fn main() {
     match url.as_str() {
         "https://moodle.insa-rouen.fr/login/index.php" => window.location().set_href("https://moodle.insa-rouen.fr/login/index.php?authCAS=CAS").unwrap(),
         "https://dsi.insa-rouen.fr/cas/" => window.location().set_href("https://dsi.insa-rouen.fr/accounts/login/").unwrap(),
-        url if url.starts_with("https://cas.insa-rouen.fr/") => {
-            match load_data() {
-                Some((username, password)) => enter_password(&CAS_LOGIN_PAGE_DESC, username, password).await,
-                None => get_password(&CAS_LOGIN_PAGE_DESC).await,
-            }
-        }
+        url if url.starts_with("https://partage.insa-rouen.fr/") => auto_login(&PARTAGE_LOGIN_PAGE_DESC).await,
+        url if url.starts_with("https://cas.insa-rouen.fr/") => auto_login(&CAS_LOGIN_PAGE_DESC).await,
         url => log!("Unknown url: {}", url),
     }
 }
