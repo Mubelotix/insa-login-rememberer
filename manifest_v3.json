@@ -14,7 +14,7 @@
     ],
     "web_accessible_resources": [{
         "resources": ["insa_login_rememberer_bg.wasm"],
-        "matches": ["https://cas.insa-rouen.fr/*", "https://moodle.insa-rouen.fr/login/index.php", "https://dsi.insa-rouen.fr/cas/", "https://partage.insa-rouen.fr/*"]
+        "matches": ["https://cas.insa-rouen.fr/*", "https://moodle.insa-rouen.fr/*", "https://dsi.insa-rouen.fr/*", "https://partage.insa-rouen.fr/*"]
     }],
     "manifest_version": 3
 }
