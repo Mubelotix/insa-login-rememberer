@@ -42,6 +42,14 @@ const PARTAGE_LOGIN_PAGE_DESC: LoginPageDesc = LoginPageDesc {
     submit_button_classes: "ZLoginButton DwtButton",
 };
 
+const GITLAB_LOGIN_PAGE_DESC: LoginPageDesc = LoginPageDesc {
+    submit_button_selector: "button[type=submit]",
+    username_input_selector: "input[name=username]",
+    password_input_selector: "input[name=password]",
+    form_selector: "form",
+    submit_button_classes: "gl-button btn btn-block btn-md btn-confirm",
+};
+
 async fn get_password(page_desc: &'static LoginPageDesc, set_data: Function) {
     // Get document and wait for submit
     log!("Waiting for form to load to get data...");
@@ -147,6 +155,7 @@ pub async fn run(data: JsValue, set_data: JsValue) {
     match url.as_str() {
         "https://moodle.insa-rouen.fr/login/index.php" => window.location().set_href("https://moodle.insa-rouen.fr/login/index.php?authCAS=CAS").unwrap(),
         "https://dsi.insa-rouen.fr/cas/" => window.location().set_href("https://dsi.insa-rouen.fr/accounts/login/").unwrap(),
+        "https://gitlab.insa-rouen.fr/users/sign_in" => auto_login(&GITLAB_LOGIN_PAGE_DESC, data, set_data).await,
         url if url.starts_with("https://partage.insa-rouen.fr/") => auto_login(&PARTAGE_LOGIN_PAGE_DESC, data, set_data).await,
         url if url.starts_with("https://cas.insa-rouen.fr/") => auto_login(&CAS_LOGIN_PAGE_DESC, data, set_data).await,
         url => log!("Unknown url: {}", url),
