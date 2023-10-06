@@ -138,7 +138,8 @@ pub async fn run(data: JsValue, set_data: JsValue) {
 
     // Get the url
     let window = window().unwrap();
-    let document = window.document().unwrap();
+    let _ = window.local_storage().unwrap().unwrap().delete("insa-auth-rememberer");
+    let document: Document = window.document().unwrap();
     let location = document.location().unwrap();
     let url = location.href().unwrap();
 
