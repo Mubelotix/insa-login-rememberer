@@ -43,9 +43,19 @@ fi
 
 printf "
 const runtime = chrome.runtime || browser.runtime;
+const browser = chrome || browser;
+
+async function set_data(new_data) {
+  await browser.storage.local.set({ data: new_data });
+  console.log('Content script saved password');
+}
 
 async function run() {
+  let data = await browser.storage.local.get('data');
+
+  const { run } = wasm_bindgen;
   await wasm_bindgen(runtime.getURL('insa_login_rememberer_bg.wasm'));
+  await run(data.data, set_data);
 }
 
 run();

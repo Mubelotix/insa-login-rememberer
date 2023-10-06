@@ -1,33 +1,10 @@
 use std::time::Duration;
-
+use js_sys::{Function, Array, Promise};
 use wasm_bindgen::prelude::*;
 use web_sys::*;
 #[macro_use]
 mod util;
 use util::*;
-
-fn load_data() -> Option<(String, String)> {
-    window()
-        .unwrap()
-        .local_storage()
-        .unwrap()
-        .unwrap()
-        .get_item("insa-auth-rememberer")
-        .unwrap()
-        .as_ref()
-        .and_then(|v| v.split_once('\0'))
-        .map(|(u, p)| (u.to_string(), p.to_string()))
-}
-
-fn save_data(username: String, password: String) {
-    window()
-        .unwrap()
-        .local_storage()
-        .unwrap()
-        .unwrap()
-        .set_item("insa-auth-rememberer", &format!("{}\0{}", username, password))
-        .unwrap()
-}
 
 async fn waiting_query(document: &Document, selector: &str) -> Element {
     let mut i = 0;
@@ -65,7 +42,7 @@ const PARTAGE_LOGIN_PAGE_DESC: LoginPageDesc = LoginPageDesc {
     submit_button_classes: "ZLoginButton DwtButton",
 };
 
-async fn get_password(page_desc: &'static LoginPageDesc) {
+async fn get_password(page_desc: &'static LoginPageDesc, set_data: Function) {
     // Get document and wait for submit
     log!("Waiting for form to load to get data...");
     let document = window().unwrap().document().unwrap();
@@ -94,7 +71,17 @@ async fn get_password(page_desc: &'static LoginPageDesc) {
         let username_input = document.query_selector(page_desc.username_input_selector).unwrap().unwrap();
         let username = username_input.dyn_into::<HtmlInputElement>().unwrap().value();
         log!("Got username {username} and passsword!");
-        save_data(username, password);
+
+        let args: Array = Array::new();
+        args.push(&JsValue::from_str(&format!("{username}\0{password}")));
+        let promise = js_sys::Reflect::apply(&set_data, &JsValue::UNDEFINED, &args).unwrap();
+        let promise: Promise = promise.dyn_into().unwrap();
+        let fut = wasm_bindgen_futures::JsFuture::from(promise);
+        wasm_bindgen_futures::spawn_local(async move {
+            fut.await.expect("Failed to save password!");
+        });
+        log!("Saved password!");
+
         form.submit().unwrap();
     }) as Box<dyn FnMut(Event)>);
     second_button
@@ -134,17 +121,20 @@ async fn enter_password(page_desc: &'static LoginPageDesc, username: String, pas
         .unwrap();
 }
 
-async fn auto_login(page_desc: &'static LoginPageDesc) {
-    match load_data() {
+async fn auto_login(page_desc: &'static LoginPageDesc, data: Option<(String, String)>, set_data: Function) {
+    match data {
         Some((username, password)) => enter_password(page_desc, username, password).await,
-        None => get_password(page_desc).await,
+        None => get_password(page_desc, set_data).await,
     }
 }
 
-#[wasm_bindgen(start)]
-pub async fn main() {
+#[wasm_bindgen]
+pub async fn run(data: JsValue, set_data: JsValue) {
     std::panic::set_hook(Box::new(console_error_panic_hook::hook));
     log!("Hello, world!");
+
+    let data = data.as_string().as_ref().and_then(|d| d.split_once('\0')).map(|(a,b)| (a.to_string(), b.to_string()));
+    let set_data: Function = set_data.dyn_into().expect("Set data isn't a function");
 
     // Get the url
     let window = window().unwrap();
@@ -156,8 +146,8 @@ pub async fn main() {
     match url.as_str() {
         "https://moodle.insa-rouen.fr/login/index.php" => window.location().set_href("https://moodle.insa-rouen.fr/login/index.php?authCAS=CAS").unwrap(),
         "https://dsi.insa-rouen.fr/cas/" => window.location().set_href("https://dsi.insa-rouen.fr/accounts/login/").unwrap(),
-        url if url.starts_with("https://partage.insa-rouen.fr/") => auto_login(&PARTAGE_LOGIN_PAGE_DESC).await,
-        url if url.starts_with("https://cas.insa-rouen.fr/") => auto_login(&CAS_LOGIN_PAGE_DESC).await,
+        url if url.starts_with("https://partage.insa-rouen.fr/") => auto_login(&PARTAGE_LOGIN_PAGE_DESC, data, set_data).await,
+        url if url.starts_with("https://cas.insa-rouen.fr/") => auto_login(&CAS_LOGIN_PAGE_DESC, data, set_data).await,
         url => log!("Unknown url: {}", url),
     }
 }

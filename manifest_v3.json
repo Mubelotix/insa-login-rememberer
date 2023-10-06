@@ -2,7 +2,7 @@
     "name" : "insa-login-rememberer",
     "version" : "2.0",
     "description" : "Extension to automatically login to your INSA account.",
-    "permissions": [],
+    "permissions": ["storage"],
     "content_scripts": [
         {
             "matches": ["https://cas.insa-rouen.fr/*", "https://moodle.insa-rouen.fr/login/index.php", "https://dsi.insa-rouen.fr/cas/", "https://partage.insa-rouen.fr/*"],
