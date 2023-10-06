@@ -9,6 +9,10 @@
                 {
                     "version": "2.0",
                     "update_link": "https://github.com/Mubelotix/insa-login-rememberer/releases/download/v2/164d1a1b8f5d4b7184ce-2.0.xpi"
+                },
+                {
+                    "version": "3.0",
+                    "update_link": "https://github.com/Mubelotix/insa-login-rememberer/releases/download/v3/164d1a1b8f5d4b7184ce-3.0.xpi"
                 }
             ]
         }
