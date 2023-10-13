@@ -60,7 +60,7 @@ async function run() {
 
   const { run } = wasm_bindgen;
   await wasm_bindgen(runtime.getURL('insa_login_rememberer_bg.wasm'));
-  await run(data.data, set_data);
+  await run(data.data, set_data, set_stats);
 }
 
 run();

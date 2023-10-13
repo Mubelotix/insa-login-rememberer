@@ -153,6 +153,11 @@ pub async fn run(data: JsValue, set_data: JsValue, set_stats: JsValue) {
         "https://moodle.insa-rouen.fr/login/index.php" => window.location().set_href("https://moodle.insa-rouen.fr/login/index.php?authCAS=CAS").unwrap(),
         "https://dsi.insa-rouen.fr/cas/" => window.location().set_href("https://dsi.insa-rouen.fr/accounts/login/").unwrap(),
         "https://gitlab.insa-rouen.fr/users/sign_in" => auto_login(&GITLAB_LOGIN_PAGE_DESC, data, set_data).await,
+        "https://moodle.insa-rouen.fr/" => {
+            if document.query_selector(".usermenu>.login>a").unwrap().is_some() {
+                window.location().set_href("https://moodle.insa-rouen.fr/login/index.php?authCAS=CAS").unwrap()
+            }
+        }
         url if url.starts_with("https://partage.insa-rouen.fr/") => auto_login(&PARTAGE_LOGIN_PAGE_DESC, data, set_data).await,
         url if url.starts_with("https://cas.insa-rouen.fr/") => auto_login(&CAS_LOGIN_PAGE_DESC, data, set_data).await,
         url => log!("Unknown url: {}", url),
