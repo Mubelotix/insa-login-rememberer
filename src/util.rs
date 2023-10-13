@@ -18,18 +18,23 @@ pub async fn sleep(duration: Duration) {
 
 macro_rules! log {
     ( $( $t:tt )* ) => {
-        web_sys::console::log_1(&format!( $( $t )* ).into());
+        web_sys::console::log_1(&format!( $( $t )* ).into())
     }
+}
+
+pub trait SimpleSerde {
+    fn serialize(&self) -> String;
+    fn deserialize(s: String) -> Self;
 }
 
 pub type FutFn<Input> = Pin<Box<dyn (Fn(Input) -> JsFuture)>>;
 
-pub fn js_function<Input: Into<JsValue>>(f: JsValue) -> FutFn<Input> {
+pub fn js_function<Input: SimpleSerde>(f: JsValue) -> FutFn<Input> {
     let function: Function = f.dyn_into().unwrap();
 
     Box::pin(move |input: Input| -> JsFuture {
         let args: Array = Array::new();
-        args.push(&input.into());
+        args.push(&input.serialize().into());
         let promise = js_sys::Reflect::apply(&function, &JsValue::UNDEFINED, &args).unwrap();
         let promise: Promise = promise.dyn_into().unwrap();
         wasm_bindgen_futures::JsFuture::from(promise)
