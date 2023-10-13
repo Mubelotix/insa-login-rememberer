@@ -133,12 +133,13 @@ async fn auto_login(page_desc: &'static LoginPageDesc, data: Option<(String, Str
 }
 
 #[wasm_bindgen]
-pub async fn run(data: JsValue, set_data: JsValue) {
+pub async fn run(data: JsValue, set_data: JsValue, set_stats: JsValue) {
     std::panic::set_hook(Box::new(console_error_panic_hook::hook));
     log!("Hello, world!");
 
     let data = data.as_string().as_ref().and_then(|d| d.split_once('\0')).map(|(a,b)| (a.to_string(), b.to_string()));
     let set_data = js_function::<String>(set_data);
+    let set_stats = js_function::<String>(set_stats);
 
     // Get the url
     let window = window().unwrap();

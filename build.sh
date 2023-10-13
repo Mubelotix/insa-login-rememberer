@@ -50,6 +50,11 @@ async function set_data(new_data) {
   console.log('Content script saved password');
 }
 
+async function set_stats(new_stats) {
+  await browser.storage.local.set({ stats: new_stats });
+  console.log('Content script saved stats');
+}
+
 async function run() {
   let data = await browser.storage.local.get('data');
 
