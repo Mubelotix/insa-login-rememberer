@@ -1,4 +1,5 @@
 use std::time::Duration;
+use js_sys::{Function, Array, Promise};
 use wasm_bindgen::prelude::*;
 use web_sys::*;
 #[macro_use]
@@ -49,7 +50,7 @@ const GITLAB_LOGIN_PAGE_DESC: LoginPageDesc = LoginPageDesc {
     submit_button_classes: "gl-button btn btn-block btn-md btn-confirm",
 };
 
-async fn get_password(page_desc: &'static LoginPageDesc, set_data: FutFn<String>) {
+async fn get_password(page_desc: &'static LoginPageDesc, set_data: Function) {
     // Get document and wait for submit
     log!("Waiting for form to load to get data...");
     let document = window().unwrap().document().unwrap();
@@ -79,11 +80,14 @@ async fn get_password(page_desc: &'static LoginPageDesc, set_data: FutFn<String>
         let username = username_input.dyn_into::<HtmlInputElement>().unwrap().value();
         log!("Got username {username} and passsword!");
 
-        let fut = set_data(format!("{username}\0{password}"));
+        let args: Array = Array::new();
+        args.push(&JsValue::from_str(&format!("{username}\0{password}")));
+        let promise = js_sys::Reflect::apply(&set_data, &JsValue::UNDEFINED, &args).unwrap();
+        let promise: Promise = promise.dyn_into().unwrap();
+        let fut = wasm_bindgen_futures::JsFuture::from(promise);
         wasm_bindgen_futures::spawn_local(async move {
             fut.await.expect("Failed to save password!");
         });
-
         log!("Saved password!");
 
         form.submit().unwrap();
@@ -125,7 +129,7 @@ async fn enter_password(page_desc: &'static LoginPageDesc, username: String, pas
         .unwrap();
 }
 
-async fn auto_login(page_desc: &'static LoginPageDesc, data: Option<(String, String)>, set_data: FutFn<String>) {
+async fn auto_login(page_desc: &'static LoginPageDesc, data: Option<(String, String)>, set_data: Function) {
     match data {
         Some((username, password)) => enter_password(page_desc, username, password).await,
         None => get_password(page_desc, set_data).await,
@@ -138,7 +142,7 @@ pub async fn run(data: JsValue, set_data: JsValue) {
     log!("Hello, world!");
 
     let data = data.as_string().as_ref().and_then(|d| d.split_once('\0')).map(|(a,b)| (a.to_string(), b.to_string()));
-    let set_data = js_function::<String>(set_data);
+    let set_data: Function = set_data.dyn_into().expect("Set data isn't a function");
 
     // Get the url
     let window = window().unwrap();

@@ -1,6 +1,5 @@
-use js_sys::{Promise, Function, Array};
-use wasm_bindgen::{JsValue, JsCast};
-use std::{time::Duration, pin::Pin};
+use js_sys::Promise;
+use std::time::Duration;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::window;
 
@@ -20,18 +19,4 @@ macro_rules! log {
     ( $( $t:tt )* ) => {
         web_sys::console::log_1(&format!( $( $t )* ).into());
     }
-}
-
-pub type FutFn<Input> = Pin<Box<dyn (Fn(Input) -> JsFuture)>>;
-
-pub fn js_function<Input: Into<JsValue>>(f: JsValue) -> FutFn<Input> {
-    let function: Function = f.dyn_into().unwrap();
-
-    Box::pin(move |input: Input| -> JsFuture {
-        let args: Array = Array::new();
-        args.push(&input.into());
-        let promise = js_sys::Reflect::apply(&function, &JsValue::UNDEFINED, &args).unwrap();
-        let promise: Promise = promise.dyn_into().unwrap();
-        wasm_bindgen_futures::JsFuture::from(promise)
-    })
 }
