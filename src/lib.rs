@@ -1,5 +1,6 @@
 use std::time::Duration;
 use js_sys::{Function, Array, Promise};
+use string_tools::get_all_before;
 use wasm_bindgen::prelude::*;
 use web_sys::*;
 #[macro_use]
@@ -48,6 +49,14 @@ const GITLAB_LOGIN_PAGE_DESC: LoginPageDesc = LoginPageDesc {
     password_input_selector: "input[name=password]",
     form_selector: "form",
     submit_button_classes: "gl-button btn btn-block btn-md btn-confirm",
+};
+
+const NEXTCLOUD_LOGIN_PAGE_DESC: LoginPageDesc = LoginPageDesc {
+    submit_button_selector: "input[type=submit]",
+    username_input_selector: "input[name=user]",
+    password_input_selector: "input[name=password]",
+    form_selector: "form",
+    submit_button_classes: "login primary",
 };
 
 async fn get_password(page_desc: &'static LoginPageDesc, set_data: Function) {
@@ -136,6 +145,10 @@ async fn auto_login(page_desc: &'static LoginPageDesc, data: Option<(String, Str
     }
 }
 
+fn url_matches(url: &str, pattern: &str) -> bool {
+    get_all_before(url, "?").trim_end_matches("/") == pattern
+}
+
 #[wasm_bindgen]
 pub async fn run(data: JsValue, set_data: JsValue) {
     std::panic::set_hook(Box::new(console_error_panic_hook::hook));
@@ -155,12 +168,13 @@ pub async fn run(data: JsValue, set_data: JsValue) {
     match url.as_str() {
         "https://moodle.insa-rouen.fr/login/index.php" => window.location().set_href("https://moodle.insa-rouen.fr/login/index.php?authCAS=CAS").unwrap(),
         "https://dsi.insa-rouen.fr/cas/" => window.location().set_href("https://dsi.insa-rouen.fr/accounts/login/").unwrap(),
-        "https://gitlab.insa-rouen.fr/users/sign_in" => auto_login(&GITLAB_LOGIN_PAGE_DESC, data, set_data).await,
         "https://moodle.insa-rouen.fr/" => {
             if document.query_selector(".usermenu>.login>a").unwrap().is_some() {
                 window.location().set_href("https://moodle.insa-rouen.fr/login/index.php?authCAS=CAS").unwrap()
             }
         }
+        url if url_matches(url, "https://nuage.insa-rouen.fr/index.php/login") => auto_login(&NEXTCLOUD_LOGIN_PAGE_DESC, data, set_data).await,
+        url if url_matches(url, "https://gitlab.insa-rouen.fr/users/sign_in") => auto_login(&GITLAB_LOGIN_PAGE_DESC, data, set_data).await,
         url if url.starts_with("https://partage.insa-rouen.fr/") => auto_login(&PARTAGE_LOGIN_PAGE_DESC, data, set_data).await,
         url if url.starts_with("https://cas.insa-rouen.fr/") => auto_login(&CAS_LOGIN_PAGE_DESC, data, set_data).await,
         url => log!("Unknown url: {}", url),
