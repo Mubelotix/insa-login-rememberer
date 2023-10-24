@@ -17,35 +17,6 @@ async fn waiting_query(document: &Document, selector: &str) -> Element {
     }
 }
 
-struct Data {
-    username: String,
-    password: String,
-}
-
-impl SimpleSerde for Data {
-    fn serialize(&self) -> String {
-        format!("{}\0{}", self.username, self.password)
-    }
-
-    fn deserialize(data: String) -> Self {
-        data.split_once('\0').map(|(a,b)| Data { username: a.to_string(), password: b.to_string()}).expect("Failed to deserialize data!")
-    }
-}
-
-struct Stats {
-
-}
-
-impl SimpleSerde for Stats {
-    fn serialize(&self) -> String {
-        String::new()
-    }
-
-    fn deserialize(_data: String) -> Self {
-        Stats {}
-    }
-}
-
 struct LoginPageDesc {
     submit_button_selector: &'static str,
     username_input_selector: &'static str,
@@ -78,7 +49,7 @@ const GITLAB_LOGIN_PAGE_DESC: LoginPageDesc = LoginPageDesc {
     submit_button_classes: "gl-button btn btn-block btn-md btn-confirm",
 };
 
-async fn get_password(page_desc: &'static LoginPageDesc, set_data: FutFn<Data>) {
+async fn get_password(page_desc: &'static LoginPageDesc, set_data: FutFn<String>) {
     // Get document and wait for submit
     log!("Waiting for form to load to get data...");
     let document = window().unwrap().document().unwrap();
@@ -108,7 +79,7 @@ async fn get_password(page_desc: &'static LoginPageDesc, set_data: FutFn<Data>) 
         let username = username_input.dyn_into::<HtmlInputElement>().unwrap().value();
         log!("Got username {username} and passsword!");
 
-        let fut = set_data(Data { username, password });
+        let fut = set_data(format!("{username}\0{password}"));
         wasm_bindgen_futures::spawn_local(async move {
             fut.await.expect("Failed to save password!");
         });
@@ -154,9 +125,9 @@ async fn enter_password(page_desc: &'static LoginPageDesc, username: String, pas
         .unwrap();
 }
 
-async fn auto_login(page_desc: &'static LoginPageDesc, data: Option<Data>, set_data: FutFn<Data>) {
+async fn auto_login(page_desc: &'static LoginPageDesc, data: Option<(String, String)>, set_data: FutFn<String>) {
     match data {
-        Some(data) => enter_password(page_desc, data.username, data.password).await,
+        Some((username, password)) => enter_password(page_desc, username, password).await,
         None => get_password(page_desc, set_data).await,
     }
 }
@@ -166,9 +137,9 @@ pub async fn run(data: JsValue, set_data: JsValue, set_stats: JsValue) {
     std::panic::set_hook(Box::new(console_error_panic_hook::hook));
     log!("Hello, world!");
 
-    let data = data.as_string().as_ref().map(|s| Data::deserialize(s.to_string()));
-    let set_data = js_function::<Data>(set_data);
-    let set_stats = js_function::<Stats>(set_stats);
+    let data = data.as_string().as_ref().and_then(|d| d.split_once('\0')).map(|(a,b)| (a.to_string(), b.to_string()));
+    let set_data = js_function::<String>(set_data);
+    let set_stats = js_function::<String>(set_stats);
 
     // Get the url
     let window = window().unwrap();
