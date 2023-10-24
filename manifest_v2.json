@@ -6,7 +6,7 @@
     "permissions": ["storage"],
     "content_scripts": [
         {
-            "matches": ["https://cas.insa-rouen.fr/*", "https://moodle.insa-rouen.fr/", "https://moodle.insa-rouen.fr/login/index.php", "https://dsi.insa-rouen.fr/cas/", "https://partage.insa-rouen.fr/*", "https://gitlab.insa-rouen.fr/users/sign_in"],
+            "matches": ["https://cas.insa-rouen.fr/*", "https://moodle.insa-rouen.fr/login/index.php", "https://dsi.insa-rouen.fr/cas/", "https://partage.insa-rouen.fr/*", "https://gitlab.insa-rouen.fr/users/sign_in"],
             "js": [
                 "insa_login_rememberer.js", "run_wasm.js"
             ],
