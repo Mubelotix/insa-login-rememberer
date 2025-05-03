@@ -1,7 +1,7 @@
 {
     "name" : "insa-login-rememberer",
     "version" : "3.0",
-    "description" : "Extension to automatically login to your **** account.",
+    "description" : "Extension to automatically login to your school account.",
     "permissions": ["storage"],
     "content_scripts": [
         {
