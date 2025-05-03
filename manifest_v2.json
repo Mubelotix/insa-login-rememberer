@@ -2,7 +2,7 @@
     "name" : "insa-login-rememberer",
     "manifest_version": 2,
     "version" : "3.0",
-    "description" : "Extension to automatically login to your INSA account.",
+    "description" : "Extension to automatically login to your **** account.",
     "permissions": ["storage"],
     "content_scripts": [
         {
